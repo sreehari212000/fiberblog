@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	dbconfig "github.com/sreehari212000/blog/dbConfig"
 	"github.com/sreehari212000/blog/models"
+	"github.com/sreehari212000/blog/utils"
 )
 
 type UserHandler struct {
@@ -27,6 +28,11 @@ func SignUp(c *fiber.Ctx) error {
 	if user.Email == "" || user.Name == "" || user.Password == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "missing required fields")
 	}
+	hashedPassword, hashError := utils.HashPassword(user.Password)
+	if hashError != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "something went wrong")
+	}
+	user.Password = hashedPassword
 	_, dbErr := dbconfig.InsertIntoDb(user.Name, user.Email, user.Password)
 	if dbErr != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "could not insert into DB")

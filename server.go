@@ -30,5 +30,11 @@ func main() {
 	// user routes
 	api.Post("/users/signup", handlers.SignUp)
 	api.Post("/users/signin", handlers.Login)
+	// posts routes
+	api.Get("/posts", handlers.GetAllPosts)
+	api.Post("/posts", handlers.CreatePost)
+	api.Get("/posts/:id", handlers.GetPostById)
+	api.Delete("/posts/:id", handlers.DeletePost)
+	// api.Patch("/posts/:id", handlers)
 	app.Listen(":3000")
 }
