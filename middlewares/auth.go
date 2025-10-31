@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,7 +9,6 @@ import (
 
 func CheckAuth(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
-	fmt.Println(authHeader)
 	if authHeader == "" {
 		return fiber.NewError(fiber.StatusUnauthorized, "token not found in the header")
 	}

@@ -22,7 +22,8 @@ func InitializeRoutes(app *fiber.App) {
 		post.Post("/", middlewares.CheckAuth, handlers.CreatePost)
 		post.Get("/:id", handlers.GetPostById)
 		post.Delete("/:id", handlers.DeletePost)
-		// post.Post("/:id/comments")
+		post.Post("/:id/comments", middlewares.CheckAuth, handlers.AddComment)
+		post.Get("/:id/comments", handlers.GetPostComments)
 	}
 
 }
