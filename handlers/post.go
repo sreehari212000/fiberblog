@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	dbconfig "github.com/sreehari212000/blog/dbConfig"
@@ -16,9 +17,8 @@ func CreatePost(c *fiber.Ctx) error {
 	if post.Title == "" || post.Description == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "required field missing")
 	}
-	// todo: extract user details from c and store instead of the hardcoded value
-	userId := 1
-	post.Author = userId
+	userId := c.Locals("user_id").(string)
+	post.Author, _ = strconv.Atoi(userId)
 	_, dbErr := dbconfig.DB.Exec("INSERT INTO posts (title, description, author_id) VALUES ($1, $2, $3) RETURNING post_id", post.Title, post.Description, post.Author)
 	if dbErr != nil {
 		fmt.Println(dbErr)

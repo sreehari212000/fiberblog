@@ -23,13 +23,13 @@ func InitDB(connString string) (*sql.DB, error) {
 	return DB, nil
 }
 
-func InsertIntoDb(name string, email string, password string) (sql.Result, error) {
-	query := `INSERT INTO users (name, email, password) VALUES($1, $2, $3);`
-	res, err := DB.Exec(query, name, email, password)
+func InsertIntoDb(name string, email string, password string) (int, error) {
+	var id int
+	query := `INSERT INTO users (name, email, password) VALUES($1, $2, $3) RETURNING user_id;`
+	err := DB.QueryRow(query, name, email, password).Scan(&id)
 	if err != nil {
 		log.Print("error inserting data into DB ", err)
-		return nil, err
+		return 0, err
 	}
-	fmt.Println(res)
-	return res, nil
+	return id, nil
 }

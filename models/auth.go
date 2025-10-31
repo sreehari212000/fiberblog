@@ -10,3 +10,8 @@ type LoginRequestBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type JwtClaim struct {
+	Email   string
+	User_Id string
+}
