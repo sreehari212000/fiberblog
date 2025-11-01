@@ -68,3 +68,14 @@ func GetPostById(c *fiber.Ctx) error {
 	}
 	return c.Status(200).JSON(fiber.Map{"success": true, "message": fmt.Sprintf("fetched post with id %v", postId), "data": post})
 }
+func LikePost(c *fiber.Ctx) error {
+	postId := c.Params("id")
+	userId := c.Locals("user_id")
+	queryString := `INSERT INTO likes(user_id, post_id) VALUES($1, $2) RETURNING like_id`
+	var likeid int
+	err := dbconfig.DB.QueryRow(queryString, userId, postId).Scan(&likeid)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "error adding like to the post")
+	}
+	return c.Status(201).JSON(fiber.Map{"success": true, "message": "liked post successfully", "likeId": postId})
+}
