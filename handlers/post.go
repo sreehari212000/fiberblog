@@ -1,15 +1,23 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	dbconfig "github.com/sreehari212000/blog/dbConfig"
 	"github.com/sreehari212000/blog/models"
 )
 
-func CreatePost(c *fiber.Ctx) error {
+type PostHanlder struct {
+	db *sql.DB
+}
+
+func NewPostHandler(db *sql.DB) *PostHanlder {
+	return &PostHanlder{db: db}
+}
+
+func (h *PostHanlder) CreatePost(c *fiber.Ctx) error {
 	var post models.Post
 	if err := c.BodyParser(&post); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request")
@@ -19,17 +27,17 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 	userId := c.Locals("user_id").(string)
 	post.Author, _ = strconv.Atoi(userId)
-	_, dbErr := dbconfig.DB.Exec("INSERT INTO posts (title, description, author_id) VALUES ($1, $2, $3) RETURNING post_id", post.Title, post.Description, post.Author)
+	_, dbErr := h.db.Exec("INSERT INTO posts (title, description, author_id) VALUES ($1, $2, $3) RETURNING post_id", post.Title, post.Description, post.Author)
 	if dbErr != nil {
 		fmt.Println(dbErr)
 		return fiber.NewError(fiber.StatusInternalServerError, "error inserting data into DB")
 	}
 	return c.Status(201).JSON(fiber.Map{"success": true, "message": "post created succesfully", "data": post})
 }
-func DeletePost(c *fiber.Ctx) error {
+func (h *PostHanlder) DeletePost(c *fiber.Ctx) error {
 	deleteID := c.Params("id")
 	queryString := `DELETE FROM posts WHERE post_id = $1`
-	res, dbErr := dbconfig.DB.Exec(queryString, deleteID)
+	res, dbErr := h.db.Exec(queryString, deleteID)
 	if dbErr != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "coult not delete post")
 	}
@@ -39,9 +47,9 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 	return c.Status(200).JSON(fiber.Map{"success": true, "message": "successfully deleted post", "id": deleteID})
 }
-func GetAllPosts(c *fiber.Ctx) error {
+func (h *PostHanlder) GetAllPosts(c *fiber.Ctx) error {
 	queryString := `SELECT post_id, title, description, author_id FROM posts`
-	rows, dbErr := dbconfig.DB.Query(queryString)
+	rows, dbErr := h.db.Query(queryString)
 	if dbErr != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "could not fetch posts")
 	}
@@ -57,23 +65,23 @@ func GetAllPosts(c *fiber.Ctx) error {
 	}
 	return c.Status(200).JSON(fiber.Map{"success": true, "message": "fetched posts succesfully", "data": posts})
 }
-func GetPostById(c *fiber.Ctx) error {
+func (h *PostHanlder) GetPostById(c *fiber.Ctx) error {
 	postId := c.Params("id")
 	queryString := `SELECT post_id, title, description, author_id FROM posts WHERE post_id = $1`
 	var post models.Post
-	err := dbconfig.DB.QueryRow(queryString, postId).Scan(&post.POST_ID, &post.Title, &post.Description, &post.Author)
+	err := h.db.QueryRow(queryString, postId).Scan(&post.POST_ID, &post.Title, &post.Description, &post.Author)
 	if err != nil {
 		fmt.Println(err)
 		return fiber.NewError(fiber.StatusInternalServerError, "could not find post with that id")
 	}
 	return c.Status(200).JSON(fiber.Map{"success": true, "message": fmt.Sprintf("fetched post with id %v", postId), "data": post})
 }
-func LikePost(c *fiber.Ctx) error {
+func (h *PostHanlder) LikePost(c *fiber.Ctx) error {
 	postId := c.Params("id")
 	userId := c.Locals("user_id")
 	queryString := `INSERT INTO likes(user_id, post_id) VALUES($1, $2) RETURNING like_id`
 	var likeid int
-	err := dbconfig.DB.QueryRow(queryString, userId, postId).Scan(&likeid)
+	err := h.db.QueryRow(queryString, userId, postId).Scan(&likeid)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "error adding like to the post")
 	}

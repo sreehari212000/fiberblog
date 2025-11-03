@@ -20,7 +20,7 @@ func NewUserHandler(db *sql.DB) *UserHandler {
 	return &UserHandler{db: db}
 }
 
-func SignUp(c *fiber.Ctx) error {
+func (h *UserHandler) SignUp(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
 		fmt.Println(err)
@@ -40,7 +40,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 	return c.Status(201).JSON(fiber.Map{"success": true, "message": "user signed up successfully", "data": user})
 }
-func Login(c *fiber.Ctx) error {
+func (h *UserHandler) Login(c *fiber.Ctx) error {
 	var user models.LoginRequestBody
 	if err := c.BodyParser(&user); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request")
@@ -51,7 +51,7 @@ func Login(c *fiber.Ctx) error {
 	queryString := `SELECT user_id, email, password FROM users WHERE email = $1`
 	var id int
 	var email, password string
-	err := dbconfig.DB.QueryRow(queryString, user.Email).Scan(&id, &email, &password)
+	err := h.db.QueryRow(queryString, user.Email).Scan(&id, &email, &password)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "user not found")
 	}
@@ -64,9 +64,4 @@ func Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
 	}
 	return c.Status(200).JSON(fiber.Map{"success": true, "message": "user logged in succesfully", "data": password, "token": jwttoken})
-}
-func (u *UserHandler) Sample(c *fiber.Ctx) error {
-	err := u.db.Ping()
-	fmt.Println(err)
-	return c.Status(200).JSON(fiber.Map{"result": "this is working"})
 }

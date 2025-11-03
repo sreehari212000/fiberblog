@@ -20,7 +20,7 @@ func InitDB(connString string) (*sql.DB, error) {
 	}
 	DB = db
 	fmt.Println("CONNECTED TO DB")
-	return DB, nil
+	return db, nil
 }
 
 func InsertIntoDb(name string, email string, password string) (int, error) {

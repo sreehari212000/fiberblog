@@ -1,14 +1,22 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	dbconfig "github.com/sreehari212000/blog/dbConfig"
 	"github.com/sreehari212000/blog/models"
 )
 
-func AddComment(c *fiber.Ctx) error {
+type CommentHandler struct {
+	db *sql.DB
+}
+
+func NewCommentHandler(db *sql.DB) *CommentHandler {
+	return &CommentHandler{db: db}
+}
+
+func (h *CommentHandler) AddComment(c *fiber.Ctx) error {
 	var comment models.Comment
 	userId := c.Locals("user_id")
 	postID := c.Params("id")
@@ -19,17 +27,17 @@ func AddComment(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "please add comment")
 	}
 	queryString := `INSERT INTO comments(post_id, author_id, text) VALUES ($1, $2, $3)`
-	_, err := dbconfig.DB.Exec(queryString, postID, userId, comment.Text)
+	_, err := h.db.Exec(queryString, postID, userId, comment.Text)
 	if err != nil {
 		fmt.Println(err)
 		return fiber.NewError(fiber.StatusInternalServerError, "error inserting data into DB")
 	}
 	return c.Status(201).JSON(fiber.Map{"success": true, "message": "comment created succesfully", "data": comment})
 }
-func GetPostComments(c *fiber.Ctx) error {
+func (h *CommentHandler) GetPostComments(c *fiber.Ctx) error {
 	postId := c.Params("id")
 	queryString := `SELECT comment_id, post_id, author_id, text FROM comments WHERE post_id = $1`
-	rows, err := dbconfig.DB.Query(queryString, postId)
+	rows, err := h.db.Query(queryString, postId)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "error fetching data from DB")
 	}
