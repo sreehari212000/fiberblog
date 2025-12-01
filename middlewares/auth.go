@@ -4,17 +4,20 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/sreehari212000/blog/logs"
 	"github.com/sreehari212000/blog/utils"
 )
 
 func CheckAuth(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
+		logs.Error("token not found in the header")
 		return fiber.NewError(fiber.StatusUnauthorized, "token not found in the header")
 	}
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	id, err := utils.VerifyJwtToken(token)
 	if err != nil {
+		logs.Error("invalid token")
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 	}
 	c.Locals("user_id", id)
