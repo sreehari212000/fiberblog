@@ -11,10 +11,10 @@ It handles user authentication, post management, comments, and likes, following 
 - PostgreSQL Database Integration
 - Password Hashing with bcrypt
 - Graceful error handling and validation
+- Containerize using Docker
 
 TODO
 - Setup Monitoring using grafana, prometheus, loki, tempo
-- Containerize using Docker
 - Deploy To Kubernetes Cluster
 
 ## Tech Stack
